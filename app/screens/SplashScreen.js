@@ -8,13 +8,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Modal,
 } from "react-native";
-import Modal from "react-native-modal";
 import Colors from "../config/Colors";
 import EmojiPicker from "../components/EmojiPicker";
 import { RFPercentage } from "react-native-responsive-fontsize";
 import Entypo from "react-native-vector-icons/Entypo";
 import Icon from "react-native-vector-icons/FontAwesome";
+import AntDesign from "react-native-vector-icons/AntDesign";
 
 const CommentSection = () => {
   const [isModalVisible, setModalVisible] = useState(false);
@@ -26,23 +27,30 @@ const CommentSection = () => {
   const [isDisliked, setIsDisliked] = useState(false);
   const [replyToCommentId, setReplyToCommentId] = useState(null);
   const [replies, setReplies] = useState({});
-
-  const toggleLike = () => {
-    setIsLiked(!isLiked);
-    if (isDisliked) {
-      setIsDisliked(false);
-    }
+  const [fourthmodalVisible, setFourthModalVisible] = useState(false);
+  const [commentStates, setCommentStates] = useState({});
+  const toggleLike = (commentId) => {
+    // Create a new state object based on the previous state
+    setCommentStates((prevStates) => ({
+      ...prevStates,
+      [commentId]: {
+        ...prevStates[commentId],
+        isLiked: !prevStates[commentId]?.isLiked,
+        isDisliked: false, // Reset dislike when liking
+      },
+    }));
   };
 
-  const toggleDislike = () => {
-    setIsDisliked(!isDisliked);
-    if (isLiked) {
-      setIsLiked(false);
-    }
-  };
-
-  const toggleModal = () => {
-    setModalVisible(!isModalVisible);
+  const toggleDislike = (commentId) => {
+    // Create a new state object based on the previous state
+    setCommentStates((prevStates) => ({
+      ...prevStates,
+      [commentId]: {
+        ...prevStates[commentId],
+        isDisliked: !prevStates[commentId]?.isDisliked,
+        isLiked: false, // Reset like when disliking
+      },
+    }));
   };
 
   const handleEmojiPicker = () => {
@@ -61,7 +69,7 @@ const CommentSection = () => {
     setReplyToCommentId(commentId);
     // Focus on the input field to allow the user to start typing the reply
     inputRef.current.focus();
-    setReplyText(`@${commentId} `); // Pre-fill the input with the username
+    setReplyText(""); // Pre-fill the input with the username
   };
 
   const sendMessage = () => {
@@ -94,6 +102,118 @@ const CommentSection = () => {
     hideEmojiPicker();
   };
 
+  const CommentReplies = ({
+    onpress,
+    commentId,
+    replies,
+    toggleLike,
+    toggleDislike,
+    isLiked,
+    isDisliked,
+  }) => {
+    return replies.map((reply) => (
+      <View key={reply._id}>
+        <View
+          key={reply._id}
+          style={{
+            width: "100%",
+            padding: 10,
+            flexDirection: "row",
+            paddingTop: RFPercentage(3),
+          }}
+        >
+          <View
+            style={{
+              width: "10%",
+              backgroundColor: Colors.blacky,
+              width: RFPercentage(5),
+              height: RFPercentage(5),
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: RFPercentage(5),
+              overflow: "hidden",
+            }}
+          >
+            <Image
+              style={{
+                width: RFPercentage(5),
+                height: RFPercentage(5),
+              }}
+              source={require("../../assets/images/person2.png")}
+            />
+          </View>
+          <View
+            style={{
+              width: "90%",
+              marginLeft: RFPercentage(1.5),
+            }}
+          >
+            <Text
+              style={{
+                fontSize: RFPercentage(1.6),
+                fontWeight: "bold",
+                color: Colors.darkgrey,
+              }}
+            >
+              Gojo Satoro
+            </Text>
+            <Text
+              style={{
+                fontSize: RFPercentage(2),
+                fontWeight: "500",
+                marginTop: RFPercentage(0.5),
+              }}
+            >
+              {reply.text} {/* Use reply text */}
+            </Text>
+            <View
+              style={{
+                width: "90%",
+                flexDirection: "row",
+                marginTop: RFPercentage(0.5),
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: RFPercentage(1.5),
+                  fontWeight: "300",
+                  color: Colors.darkgrey,
+                }}
+              >
+                57 min
+              </Text>
+              <TouchableOpacity onPress={onpress}>
+                <Text
+                  style={{
+                    marginLeft: RFPercentage(2),
+                    fontSize: RFPercentage(1.7),
+                    fontWeight: "400",
+                  }}
+                >
+                  reply
+                </Text>
+              </TouchableOpacity>
+              <View
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  flexDirection: "row",
+                }}
+              >
+                <TouchableOpacity style={{ marginRight: RFPercentage(3) }}>
+                  <Icon name={"heart-o"} size={15} color={"black"} />
+                </TouchableOpacity>
+                <TouchableOpacity>
+                  <Icon name={"thumbs-o-down"} size={17} color={"black"} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    ));
+  };
   return (
     <View style={{ flex: 1 }}>
       <TouchableOpacity
@@ -103,15 +223,20 @@ const CommentSection = () => {
           alignItems: "center",
           justifyContent: "center",
         }}
-        onPress={toggleModal}
+        onPress={() => setFourthModalVisible(true)}
       >
         <Text style={{ color: Colors.blacky }}>View Comments</Text>
       </TouchableOpacity>
 
       <Modal
         style={{ marginBottom: RFPercentage(10) }}
-        isVisible={isModalVisible}
-        onBackdropPress={toggleModal}
+        animationType="slide"
+        transparent={true}
+        visible={fourthmodalVisible}
+        onRequestClose={() => {
+          Alert.alert("Modal has been closed.");
+          setFourthModalVisible(!fourthmodalVisible);
+        }}
       >
         <View
           style={{
@@ -119,8 +244,25 @@ const CommentSection = () => {
             backgroundColor: "white",
           }}
         >
-          <View style={{ flex: 1, backgroundColor: "lightgrey" }}></View>
-
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.1)" }}></View>
+          <View
+            style={{
+              width: "93%",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              marginVertical: RFPercentage(2),
+            }}
+          >
+            <Text style={{ fontSize: RFPercentage(1.7) }}>23 comments</Text>
+            <TouchableOpacity
+              onPress={() => setFourthModalVisible(!fourthmodalVisible)}
+              activeOpacity={0.7}
+              style={{ position: "absolute", right: 0 }}
+            >
+              <AntDesign name={"close"} size={25} color={"black"} />
+            </TouchableOpacity>
+          </View>
           <FlatList
             style={{ width: "100%" }}
             data={messages}
@@ -210,141 +352,47 @@ const CommentSection = () => {
                       }}
                     >
                       <TouchableOpacity
-                        onPress={toggleLike}
                         style={{ marginRight: RFPercentage(3) }}
+                        onPress={() => toggleLike(item._id)}
                       >
                         <Icon
-                          name={isLiked ? "heart" : "heart-o"}
+                          name={
+                            commentStates[item._id]?.isLiked
+                              ? "heart"
+                              : "heart-o"
+                          }
                           size={15}
-                          color={isLiked ? "red" : "black"}
+                          color={
+                            commentStates[item._id]?.isLiked ? "red" : "black"
+                          }
                         />
                       </TouchableOpacity>
-                      <TouchableOpacity onPress={toggleDislike}>
+                      <TouchableOpacity onPress={() => toggleDislike(item._id)}>
                         <Icon
-                          name={isDisliked ? "thumbs-down" : "thumbs-o-down"}
+                          name={
+                            commentStates[item._id]?.isDisliked
+                              ? "thumbs-down"
+                              : "thumbs-o-down"
+                          }
                           size={17}
-                          color={isDisliked ? Colors.blue : "black"}
+                          color={
+                            commentStates[item._id]?.isDisliked
+                              ? Colors.blue
+                              : "black"
+                          }
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {Object.keys(replies).map((parentCommentId) => (
-                    <View key={parentCommentId}>
-                      {replies[parentCommentId].map((reply) => (
-                        <View
-                          key={reply._id}
-                          style={{
-                            width: "100%",
-                            padding: 10,
-                            flexDirection: "row",
-                            paddingTop: RFPercentage(3),
-                          }}
-                        >
-                          <View
-                            style={{
-                              width: "10%",
-                              backgroundColor: Colors.blacky,
-                              width: RFPercentage(5),
-                              height: RFPercentage(5),
-                              alignItems: "center",
-                              justifyContent: "center",
-                              borderRadius: RFPercentage(5),
-                              overflow: "hidden",
-                            }}
-                          >
-                            <Image
-                              style={{
-                                width: RFPercentage(5),
-                                height: RFPercentage(5),
-                              }}
-                              source={require("../../assets/images/person2.png")}
-                            />
-                          </View>
-                          <View
-                            style={{
-                              width: "90%",
-                              marginLeft: RFPercentage(1.5),
-                            }}
-                          >
-                            <Text
-                              style={{
-                                fontSize: RFPercentage(1.6),
-                                fontWeight: "bold",
-                                color: Colors.darkgrey,
-                              }}
-                            >
-                              Gojo Satoro
-                            </Text>
-                            <Text
-                              style={{
-                                fontSize: RFPercentage(2),
-                                fontWeight: "500",
-                                marginTop: RFPercentage(0.5),
-                              }}
-                            >
-                              {reply.text} {/* Use reply text */}
-                            </Text>
-                            <View
-                              style={{
-                                width: "90%",
-                                flexDirection: "row",
-                                marginTop: RFPercentage(0.5),
-                                alignItems: "center",
-                              }}
-                            >
-                              <Text
-                                style={{
-                                  fontSize: RFPercentage(1.5),
-                                  fontWeight: "300",
-                                  color: Colors.darkgrey,
-                                }}
-                              >
-                                57 min
-                              </Text>
-                              <Text
-                                style={{
-                                  marginLeft: RFPercentage(2),
-                                  fontSize: RFPercentage(1.7),
-                                  fontWeight: "400",
-                                }}
-                              >
-                                reply
-                              </Text>
-                              <View
-                                style={{
-                                  position: "absolute",
-                                  right: 0,
-                                  flexDirection: "row",
-                                }}
-                              >
-                                <TouchableOpacity
-                                  onPress={toggleLike}
-                                  style={{ marginRight: RFPercentage(3) }}
-                                >
-                                  <Icon
-                                    name={isLiked ? "heart" : "heart-o"}
-                                    size={15}
-                                    color={isLiked ? "red" : "black"}
-                                  />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={toggleDislike}>
-                                  <Icon
-                                    name={
-                                      isDisliked
-                                        ? "thumbs-down"
-                                        : "thumbs-o-down"
-                                    }
-                                    size={17}
-                                    color={isDisliked ? Colors.blue : "black"}
-                                  />
-                                </TouchableOpacity>
-                              </View>
-                            </View>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  ))}
+                  <CommentReplies
+                    commentId={item._id}
+                    replies={replies[item._id] || []}
+                    toggleLike={() => toggleLike(item._id)}
+                    toggleDislike={() => toggleDislike(item._id)}
+                    isLiked={commentStates[item._id]?.isLiked}
+                    isDisliked={commentStates[item._id]?.isDisliked}
+                    onpress={() => replyToComment(item._id)}
+                  />
                 </View>
               </View>
             )}
