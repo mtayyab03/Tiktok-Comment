@@ -201,11 +201,22 @@ const CommentSection = () => {
                   flexDirection: "row",
                 }}
               >
-                <TouchableOpacity style={{ marginRight: RFPercentage(3) }}>
-                  <Icon name={"heart-o"} size={15} color={"black"} />
+                <TouchableOpacity
+                  onPress={toggleLike}
+                  style={{ marginRight: RFPercentage(3) }}
+                >
+                  <Icon
+                    name={isLiked ? "heart" : "heart-o"}
+                    size={15}
+                    color={isLiked ? "red" : "black"}
+                  />
                 </TouchableOpacity>
-                <TouchableOpacity>
-                  <Icon name={"thumbs-o-down"} size={17} color={"black"} />
+                <TouchableOpacity onPress={toggleDislike}>
+                  <Icon
+                    name={isDisliked ? "thumbs-down" : "thumbs-o-down"}
+                    size={17}
+                    color={isDisliked ? Colors.blue : "black"}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
